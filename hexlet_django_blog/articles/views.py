@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.urls import reverse
 from django.views import View
-from hexlet_django_blog.article.models import Article
-from hexlet_django_blog.article.forms import ArticleForm
+from hexlet_django_blog.articles.models import Article
+from hexlet_django_blog.articles.forms import ArticleForm
 
 class IndexView(View):
     def get(self, request, *args, **kwargs):
@@ -36,7 +36,7 @@ class ArticleFormCreateView(View):
         form = ArticleForm()
         return render(
             request,
-            'article/create.html',
+            'articles/create.html',
             context={'form': form}
         )
     
@@ -48,7 +48,41 @@ class ArticleFormCreateView(View):
         messages.error(request, 'error message')
         return render(
             request,
-            'article/create.html',
+            'articles/create.html',
             context={'form': form}
         )
+
+
+class ArticleFormEditView(View):
+    def get(self, request, *args, **kwargs):
+        article_id = kwargs['id']
+        article = Article.objects.get(id=article_id)
+        form = ArticleForm(instance=article)
+        return render(
+            request,
+            'articles/update.html',
+            context={'form': form, 'article_id': article_id}
+        )
+
+    def post(self, request, *args, **kwargs):
+        article_id = kwargs.get("id")
+        article = Article.objects.get(id=article_id)
+        form = ArticleForm(request.POST, instance=article)
+        if form.is_valid():
+            article = form.save()
+            return redirect('article_show', id=article.id)
+        return render(
+            request,
+            'articles/update.html',
+            context={'form': form, 'article_id': article_id}
+        )
+
+
+class ArticleFormDeleteView(View):
+    def post(self, request, *args, **kwargs):
+        article_id = kwargs['id']
+        article = Article.objects.get(id=article_id)
+        if article:
+            article.delete()
+        return redirect('articles')
 # Create your views here.
